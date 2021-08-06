@@ -1,0 +1,24 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+  pre_build:
+    commands:
+      - npm install
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 744731213525.dkr.ecr.eu-west-1.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...          
+      - docker build -t sample-react-app:latest .
+      - echo Build completed on `date`
+      - docker tag sample-react-app:latest 744731213525.dkr.ecr.eu-west-1.amazonaws.com/sample-react-app:latest
+      - echo Pushing the Docker image...
+      - docker push 744731213525.dkr.ecr.eu-west-1.amazonaws.com/sample-react-app:latest
+      - echo Image pushed
+  post_build:
+    commands:
+      - aws ecs update-service --cluster sample-react-app --service sample-react-app --force-new-deployment
